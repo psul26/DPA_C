@@ -1,0 +1,132 @@
+Attack wrapper and computation of metrics
+=========================================
+
+Intro
+-----
+
+The aim of the attack wrapper is to launch the attack program,
+retrieve traces from the public base, give them one by one to the
+attack program, retrieve result matrices from the attack program and
+store them for later exploitation by the metrics computation tool.
+
+
+Compilation
+-----------
+
+To compile the attack wrapper, you need:
+
+- A x86 or x86_64 machine (may work on other architecture but not yet
+  tested)
+
+- A reasonably recent Linux system (tested on a Debian Lenny
+  system). The compilation should normally work (but it was not
+  tested) on other POSIX OS (such as Mac OS)
+
+- Support for pthread (available on almost all POSIX OS)
+
+- Standard C compilation tools (gcc, make...)
+
+- If you want to read the traces from the public database, the libpq
+ (PostgreSQL) library and development files (package libpq-dev on a
+ Debian system). The wrapper can now read traces from the disk so, in
+ this case, you do not need the PostgreSQL library.
+
+
+To compile the wrapper, just type on a command line (this assume that
+you are on the directory where you saved the source files):
+
+$ ./configure
+$ make
+
+If you do not need the database support (i.e. if you want to read
+traces from disk), use:
+./configure --with-postgresql=no
+instead of:
+./configure
+
+The attack wrapper and the tool to compute metrics are now compiled
+inside the src directory. If you want to install them (this is not
+necessary as you can use them from the src directory ; by default on
+/usr/local/bin, but it can be changed using the --prefix=/opt option
+to ./configure), type:
+
+$ make install
+
+
+Use
+---
+
+The attack wrapper supports several options:
+
+ -i, --iterations=NUM	Provide NUM traces to the attack program (1-20000, default: 20000)
+ -k, --key=NUM		Use the key number NUM in the base (0-31, default: 0)
+ -o, --output=FILENAME	Store the results of the attack in FILENAME (default: results)
+ -b, --binary		Output results in binary format (default: false)
+ -d, --trace-dir=DIR	Path to the directory containg the traces (default: read from DB)
+ -x, --dir-index=FILENAME	Path to the trace directory index file
+ -h, --help		Print the help message
+ -v, --version		Print the version of the attack wrapper
+
+The last argument on the command line must be the name of your attack
+program.
+
+
+The options of the compute results tool are:
+
+-o, --output=PREFIX	Prefix of the output filenames (default: results)
+-h, --help		Print this help message
+-v, --version		Print the version of the attack wrapper
+
+The remaining arguments on the command line are the *binary* results
+produced by one or several iterations of the attack wrapper.
+
+
+Example
+-------
+
+To launch the attack wrapper with the attack program attack_program,
+on the first key (number 0) of the public database, on all the 20,000
+available traces for this key. The results will be stored on file
+results_k0 with the binary format (this is the format used by the
+metrics computation tool):
+
+$ ./attack_wrapper -i 20000 -k 0 -o results_k0 -b ./attack_program
+
+The same, but using the traces stored inside directory
+DPA_contest2_public_base_diff_vcc_a128_2009_12_23 instead of using the
+network database:
+
+$ ./attack_wrapper -i 20000 -k 0 -o results_k0 -b -d DPA_contest2_public_base_diff_vcc_a128_2009_12_23 ./attack_program
+
+And to speed up the directory listing, if you have downloaded the
+index file (DPA_contest2_public_base_index_file) from the website:
+
+$ ./attack_wrapper -i 20000 -k 0 -o results_k0 -b -d DPA_contest2_public_base_diff_vcc_a128_2009_12_23 -x DPA_contest2_public_base_index_file ./attack_program
+
+
+To compute the result metrics (given that the attack was launched on
+three keys and the results stored, in binary format, into files
+results_k[0,1,2]):
+
+$ ./compute_results results_k0 results_k1 results_k2
+
+
+Support
+-------
+
+If you have any problem with the compilation or the use of the attack
+wrapper, do not hesitate to contact contact@dpacontest.org. Please
+give us as much information as possible (architecture, version of the
+operating system, complete error log, etc.).
+
+
+
+Python reference attack
+=======================
+
+The directory examples contains the Python version of the reference
+attack. Be carefull, this version is 40 times slower (!) than the
+original C++ reference attack. The aim of this example is only to show
+how to write an attack in Python and communicate with the attack
+wrapper.
+

@@ -1,0 +1,625 @@
+**********************************************************************************
+Copyright Institut Telecom
+Contributors: Renaud Pacalet (renaud.pacalet@telecom-paristech.fr)
+
+This software is a computer program whose purpose is to exploit power traces
+in order to retrieve a Data Encryption Standard (DES) secret key.
+
+This software is governed by the CeCILL license under French law and
+abiding by the rules of distribution of free software.  You can  use, 
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info". 
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability. 
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or 
+data to be ensured and,  more generally, to use and operate it in the 
+same conditions as regards security. 
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL license and that you accept its terms. For more
+information see the LICENCE-fr.txt or LICENSE-en.txt files.
+**********************************************************************************
+
+Important note:
+===============
+
+We did our very best to avoid "Hidden or Mysterious Parameter Values" (HMPV) in
+this algorithm and its implementation. There should thus not be anything like:
+
+  double magic_threshold = 0.001258479;
+  double magic_weight = 7.9864201;
+  int magic_search_window_start = 5740;
+  int magic_number_of_iterations = 48;
+  ...
+
+without a strong explanation showing that these values were not computed from a
+larger number of traces than what we claim. Indeed, tuning HMPVs is a very
+efficient way to reduce the number of traces required for an attack but if they
+are computed from a larger number of traces, the final claim becomes somehow
+dubious. Despite our careful review, it could be that we forgot an explanation
+somewhere or that we used an arbitrary value without even noticing it. If you
+find such a HMPV, please inform us and we will add the necessary explanation,
+remove it or prove by any other mean that it can be set with at most the number
+of traces we use.
+
+A) Content:
+===========
+
+README:              this file
+Makefile:            type 'make' to get help on the different targets
+cop.h cop.c:         cooperative optimization
+des.h des.c:         DES
+km.h km.c:           DES secret keys partial knowledge management
+tr_pcc.h tr_pcc.c:   Pearson correlation coefficients between a vector random
+                     variable and a set of scalar random variables
+traces.h traces.c:   power traces processing
+utils.h utils.c:     utility functions
+fetch.c:             simple program to access the DPA contest database, retrieve
+                     power traces, secret keys, plain texts and cipher texts and
+                     to store them in a binary file in the HWSec format
+cpa_cop.c:           source code of the BS-CPA-COP (Built-in determined Sub-key
+                     Correlation Power Analysis with Cooperative Optimization
+                     Post-processing) attack
+HWSec.txt:           text file describing the HWSec file format, the one used by
+                     the power traces processing software library
+doxygen.cfg:         doxygen configuration file
+cpa-cop-X-rY.dat:    results in representative order with X traces sets and
+                     CPA-COP SVN release rY
+
+All library source code is commented in the DOXYGEN format. If you have doxygen
+installed somewhere, just type 'make doc' and browse the generated documentation
+in the created 'docs' sub-directory.
+
+B) Quick start:
+===============
+
+1) First compile everything by typing 'make all'. Note: the fetch program
+depends on the libpq library; please install it first if needed.
+
+2) Type:
+
+  ./fetch secmatv1_2006_04_0809 traces.hws 300 0
+
+to fetch 300 rows from table 'secmatv1_2006_04_0809' of the DPA contest
+database, starting at row #0 and to store them in the HWSec format in a file
+named 'traces.hws'.
+
+3) Type:
+
+  ./cpa_cop traces.hws > cpa_cop.log
+
+to run the attack on the 300 traces of the file; during execution the program
+will print a progression report:
+
+  set traces hits average
+    1   159   16
+
+on the standard error output. After completion the log file contains the summary
+report:
+
+  set traces hits average
+    1   291  100 291.000
+
+Indicating that the first (and single) set of traces was attacked, and that
+starting at trace #192 in the set, 100 consecutive attacks succeeded, thus the
+291 traces count. The average score (over one single set) is also 291.
+
+C) Short description:
+=====================
+
+The BS-CPA-COP algorithm is a classical Correlation Power Analysis targeting the
+first and the last round keys and using Pearson Correlation Coefficients (PCCs).
+It thus requires the knowledge of both plain and cipher texts. In both round
+keys, the eight 6-bits sub-keys are considered independently, leading to a
+likelihood indicator for each of the 64 possible values of each of the 16
+sub-keys. A pre-processing step reduces the search windows for CPA peaks in the
+PCC traces; it computes the PCC trace between the power traces and the Hamming
+distance between L0 and L1=R0 and restricts the search window for R0->R1
+transitions to the positive area around the maximum of this PCC trace. The
+search window for R14->R15 transitions is simply the R0->R1 one, shifted by 14
+clock periods (the clock period length is taken as the traces length divided by
+32). A post-processing step exploits the likelihood indicators from the CPA step
+and merges all the available information about each bit in order to make the
+best decision. This post-processing uses a cooperative optimization algorithm
+based on the theory introduced by Xiaofei Huang (see, for instance, "Cooperative
+Optimization for Energy Minimization: A Case Study of Stereo Matching", in
+Pattern Recognition, 26th DAGM Symposium, Springer-Verlag, LNCS 3175, 2004, pp.
+302–309.
+
+D) Detailed description:
+========================
+
+D.1) Notations:
+---------------
+
+The notations used in the following explanations are as follows. Important note:
+different notations and conventions are used allover the C implementation.
+
+In b-bits words, bits are numbered from 1 for the leftmost to b for the
+rightmost (as in the DES standard)
+
+If A is a word, |A| is the bit-width of A and ai (1<=i<=|A|) is the i-th bit of
+A, a1 being the leftmost bit
+
+Scalar values are denoted X
+
+Vectors are denoted X[.]
+
+Component #i of vector X[.] is denoted X[i]
+
+By default X[1] is the first component of vector X[.]
+
+|X[.]| is the number of components of vector X[.]
+
+N is the number of traces we are working on
+
+Pn[.] is power trace #n (1<=n<=N)
+
+Pn[i] (1<=i<=|Pn[.]|) is sample #i of Pn[.]
+
+LR is the 64 bits state register during a DES operation
+
+L is the 32 bits left half of the state register during a DES operation
+
+R is the 32 bits right half of the state register during a DES operation
+
+SK(r,s,K) (1<=r<=16,1<=s<=8) is the 6-bits sub-key #s of round key #r, assuming
+the 56 bits secret key is K; the sub-keys numbering follows the SBoxes numbering
+of the DES standard
+
+Rn(0) is the value stored in register R at the input of the first round of DES
+(after Initial Permutation of the message) when Pn[.] was acquired
+
+Rn(r,K) (1<=r<=16) is the value of R after DES round #r, still for power trace
+Pn[.], under the assumption that the 56 bits secret key was K
+
+Rn(r,s,g) (1<=r<=16,1<=s<=8,0<=g<=63) is the value of the 4 bits of Rn(r,K)
+corresponding to the outputs of SBox #s, for any K such that SK(r,s,K)=g
+
+Tn(r,s,g) (0<=r<=15,1<=s<=8,0<=g<=63) is the Hamming distance between Rn(r,s,g)
+and Rn(r+1,s,g)
+
+D.2) Power model:
+-----------------
+
+The BS-CPA-COP attack targets both the first and last round keys of the DES
+encipherment. In order to recover both round keys, it computes correlations
+between the power traces and a power model depending on partial guesses on the
+round keys. The better the correlation, the higher the probability that the
+corresponding guess is correct. The power models used are transition counts
+between a state of the right half of the state register and its next state. Each
+model deals with 4 bits of the register, those that are computed from the output
+of one of the 8 SBoxes. All in all, there are 8*64 power models for the first
+round (8 four-bits chunks, times 64 guesses for the corresponding 6 bits subkey)
+and 8*64 others for the last round. They are the Tn(0,s,g) and the Tn(14,s,g).
+These power models are slightly optimized by counting twice the transitions of
+bits entering 2 SBoxes and once only the transitions of bits entering one single
+SBox. The rationale behind this is that bits entering two SBoxes probably have a
+higher load capacitance in the silicon. We denote TOn(r,s,g) these optimized
+power models.
+
+D.3) Statistical tools:
+-----------------------
+
+Apart from the cooperative optimization, the main statistical tool is the
+unbiased Pearson Correlation Coefficient (PCC) between power traces and power
+models. If X[.] is a vector random variable (like set of power traces) and Y a
+scalar random variable (like a power model for a set of power traces), the
+unbiased PCC between them is given by:
+
+  PCC(X[.],Y) = (E(X[.]*Y)-E(X[.])*E(Y))/(ubstd(X[.])*ubstd(Y))
+
+E(Y) is the expectation of the scalar random variable Y, E(X[.]) is the
+component-wise expectation of the vector random variable X[.]:
+
+  E(X[.])[i] = E(X[i]),
+
+ubstd(Y) is the unbiased standard deviation of Y, defined as:
+
+  ubstd(Y) = E((Y-E(Y))^2)*N/(N-1)
+
+where N is the number of realizations of Y used to estimate ubstd(Y) and
+ubstd(X[.]) is the component-wise unbiased standard deviation of X[.]:
+
+  ubstd(X[.])[i] = ubstd(X[i])
+
+We denote PCC(1,s,g)[.] (respectively PCC(16,s,g)) (1<=s<=8,0<=g<=63) the (unbiased) PCC traces
+between the power traces Pn[.] and the TOn(0,s,g) (respectively TOn(14,s,g))
+optimized power models for 1<=n<=N.
+
+D.4) Pre-processing:
+--------------------
+
+Before applying the main algorithm the power traces are pre-processed by
+identifying two sub-windows in which the LR(0)->LR(1) and LR(14)->LR(15)
+transitions are supposed to take place. The goal is to increase the performance
+of the algorithm by reducing the number of false detections elsewhere in the
+traces and also to dramatically reduce the computation load. The bounds of these
+two search windows are computed as follows:
+
+1. Period, an estimator of the number of samples per clock period is first
+computed as the traces length divided by 32 (traces supposedly span over 32
+clock periods). Note: this is not a HMPV: a SPA on a single power trace gives
+exactly the same result. One can, for instance, fold a single trace by splitting
+it in chunks, computing the average of the sum of the complete chunks, do this
+for every possible chunk's sizes and keep the size that exhibits the highest
+peak. This very simple frequency analysis immediately produces the right clock
+period. A Fourier transform would do the same.
+
+2. The unbiased PCC between power traces and the Hamming distance between L(0)
+and L(1) is computed; it represents the correlation between the power traces and
+the number of transitions in the left half of the state register at the end of
+the first round; L(0) and L(1) = R(0) are known from the plain texts so the
+transition count is easily computed.
+
+3. The maximum of this PCC trace is searched for in a window limited to the
+first half of the PCC trace: this transition is supposed to take place at the
+beginning of the processing and an accidental higher peak in the second half
+would break the algorithm because R14->R15 transitions are searched for 14 clock
+periods later, which would then fall beyond the end of the traces.
+
+4. The entire positive area around this maximum is used as the search window for
+all the subsequent investigations on R(0) to R(1) transitions; the same search
+window, shifted ahead by 14 clock periods is used for R(14) to R(15)
+transitions. The rationale behind this choice is that L(r-1)->L(r) transitions
+should take place at about the same time as R(r-1)->R(r) transitions, and that
+R(14)->R(15) transitions take place 14 clock periods after R(0)->R(1)
+transitions.
+
+The sub-window estimator and the cooperative optimization algorithm use the
+same power traces.
+
+D.5) Correlation power analysis:
+--------------------------------
+
+After pre-processing, the CPA takes place and 2*8*64 unbiased PCC(r,s,g) traces
+are computed (r in {1,16}, 1<=s<=8, 0<=g<=63). This CPA analysis is optimized
+thanks to a technique inspired from the BS-CPA by Yuichi KOMANO, Hideo SHIMIZU
+and Shinichi KAWAMURA (see "Build-in determined Sub-key Correlation Power
+Analysis", IACR ePrint): it progressively guesses new key bits. Every time new
+key bits are guessed, the CPA is run again, taking these new bits into account.
+Thanks to this strategy the maximum of PCC traces are searched for in a guided
+way. The algorithm starts with no knowledge about the key and stops when 48 bits
+or more are assigned a value. Searching for new bits is done as follows:
+
+1. Compute the PCC traces on all the not (completely) known yet sub-keys.
+Completely known sub-keys are used in the computation of the power model
+altogether with the guesses on the unknown bits of the target sub-key.
+
+2. For each of the 2*8 sub-keys and for each of the guessed values, the maximum
+of the PCC trace is searched for in the search window computed during the
+pre-processing. 1 plus this maximum is stored. The plus 1 guarantees a positive
+value (PCCs are between -1 and +1), which is required by the following steps.
+
+3. For each of the 2*8 sub-keys, the sum of the stored values is computed. Each
+of the values is then divided by the sum. This produces normalized likelihood
+informations on the guesses. A 2*8*64 LK(r,s,g) array stores these likelihoods.
+Note: their sum is 1, but they are not really probabilities, on a pure
+theoretical point of view. Non zero values are values compatible with the
+current knowledge about the secret key.  For completely known sub-keys, the LK
+corresponding to the known value is 1 while the 63 others are all zero. No hard
+decision is made from the LK(r,s,g) values, as in classical similar analyzes.
+These 2*8*64 real values are considered instead as likelihoods for the different
+candidate sub-keys. Each of the 2*8 sub-keys is thus associated a set of 64
+likelihood indicators for its 64 candidate values. The greater the indicator,
+the more likely the candidate value.
+
+4. The LK(r,s,g) are used to initialize the cooperative optimization algorithm
+(see below). Because the cooperative optimization MINIMIZES a cost function, the
+sub-functions of the 56 agents are computed as the likelihood that the input
+valuation is NOT the right one. For agents responsible of a key bit pertaining
+to a single sub-key s of round key r, the sub-function is:
+
+    Ei(g) = 1 - LK(r,s,g)
+
+while for agents responsible of a key bit pertaining to two sub-keys, s1 and
+s16, of round keys #1 and #16, the sub-function is:
+
+    Ei(g1,g16) = 1 - LK(1,s1,g1) * LK(16,s16,g16)
+
+5. The cooperative optimization is then launched until stability or a very large
+number of iterations (10000). This very large number of iterations is not a HMPV
+because when stability is not reached after such a number of iterations, it
+indicates an oscillating situation between two equally likely points; if this
+happens (it never did), the program crashes to avoid an infinite computation
+time. It is thus equivalent to a timeout limit on the computation time. Note: it
+could be considered a HMPV if instead of crashing, the program was just adding
+one more trace. Changing its value would then change the scores and the way to
+compute its value should be explained.
+
+6. Each of the 2*8 sub-keys is then evaluated on a three-fold criteria:
+
+a) There must be a consensus among all the agents of the cooperative
+optimization about the preferred value for the sub-key.
+
+b) The preferred value must differ from already known bits or it must add new
+bits to the collection of already known bits. In the former case the algorithm
+"changes its mind" about some key bits; in the latter it adds some new
+information.
+
+c) The confidence estimator for the preferred sub-key value, computed as the
+product of the 6 individual confidences of the 6 agents, must be the maximum one
+among remaining sub-keys after filters a) and b).
+
+If there is such a sub-key, its preferred value is integrated to the current
+knowledge. If not, the algorithm stops, one more trace is added and the whole
+process, including pre-processing, is restarted from scratch.
+
+7. If the number of currently known bits is less than 48, search for more bits
+by restarting at step 1.
+
+8. Among the known bits select the 48 with highest confidence and check whether
+they are correct or not. Report success if they are, else report failure.
+
+This algorithm can be summarized with the following pseudo-code:
+
+known bits = none;
+while known bits < 48 do
+  for r in {1,16}
+    for s in 1 to 8
+      sum = 0;
+      for g in 0 to 63
+        P[.] = PCC(r,s,g)[.];
+        LK(r,s,g) = 1 + max(P[.]);
+        sum += LK(r,s,g);
+      end for;
+      for g in 0 to 63
+        LK(r,s,g) = LK(r,s,g) / sum;
+      end for;
+    end for;
+  end for;
+  initialize cooperative optimization with LK;
+  n = 0;
+  do
+     iterate cooperative optimization;
+     n = n + 1
+     if n == 10000
+       give up DPA contest;
+     end if;
+  until current preferred values == previous preferred values;
+  max = 0;
+  for r in {1,16}
+    for s in 1 to 8
+      if consensus on sub-key s of round key r
+        v = preferred value for sub-key s of round key r;
+        if (v conflicts with known bit values) or
+           (sub-key s of round key r contains unknown bits)
+          if confidence on sub-key s of round key r > max
+            max = confidence on sub-key s of round key r;
+            candidate = (r,s,v);
+          end if;
+        end if;
+      end if;
+    end for;
+  end for;
+  if no candidate
+    exit while loop and restart with one more trace;
+  end if;
+  add candidate to known bits;
+end while;
+while known bits > 48 do
+  remove known bit with less confidence;
+end while;
+
+D.6) Cooperative optimization:
+------------------------------
+
+The cooperative optimization algorithm aims at merging the likelihood
+information from first and last round keys to compute new, combined, likelihood
+indicators for the 56 bits of the secret key. For a given set of DES power
+traces and their corresponding plain and cipher texts, the algorithm tries to
+minimize the following function of the 56 bits of the secret key K:
+
+
+  E(K) = sum(1<=i<=56)(Ei(K))
+
+where
+
+  Ei(K) = 1 - LK(r,s,SK(r,s,K))
+
+if bit #i of K is only in sub-key s of round key r and
+
+  Ei(K) = 1 - LK(1,s1,SK(1,s1,K)) * LK(16,s16,SK(16,s16,K))
+
+if bit #i of K is in sub-key s1 of round key #1 and in sub-key s16 of round key
+#16. Examples:
+
+  E8(K) = 1 - LK(1,4,SK(1,4,K)) * LK(16,3,SK(16,3,K))
+  E43(K) = 1 - LK(1,8,SK(1,8,K))
+  E44(K) = 1 - LK(16,7,SK(16,7,K))
+
+E(K) is thus the sum of these 56 individual likelihoods and my be considered as
+a general likelihood information about K not being the correct secret key.
+Finding a secret key K that minimizes this global likelihood should maximize the
+probability that K is the actual secret key.
+
+Each Ei sub-function depends on at most 11 bits of the secret key so they can be
+optimized independently, which is one of the conditions for the cooperative
+optimization. Their supports are obviously not disjoint, which is a second
+condition to apply cooperative optimization. For a given 1<=i<=56, we define the
+neighbors of Ei as the set of Ej (j!=i) sub-functions such that the bit #j of K
+is one of the variables Ei depends on. Example: E43(K) depends only on bits
+30,33,37,43,47 and 51 of K. Its neighbors are thus E30,E33,E37,E47 and E51. The
+same neighbour concept is also used on key bits and on "agents".
+
+An "agent" is responsible for each bit of K. The agent for bit #i stores several
+parameters among which the two most important are its previous and current
+likelihood indicators phi_old(i)[b] and phi_new(i)[b] (b in {0,1}) for the two
+possible values of its associated variable at previous (old) and current (new)
+iterations of the algorithm. The optimization algorithm is the following:
+
+1) The 56 agents are initialized. The initial old and new likelihood indicators
+are all set to zero
+
+2) Iterate
+
+2.a) Compute the new likelihood indicator phi_new(i)[b] of each agent for each
+of the two values b of its associated key bit #i as the minimum over all the
+valuations V of the support of Ei in which bit #i takes value b (Vi=b) of:
+
+  (1 - l) * Ei(V) + l * (sum(j in Ni)(phi_old(j)[Vj] / |Nj|))
+
+where Ni is the set of neighbors of agent #i, excluding itself, Vj is the value
+taken by bit #j in valuation V, |Nj| is the number of neighbors of agent #j,
+excluding itself and l is the lambda cooperation factor of the theory (see the
+notes below)
+
+2.b) Replace old values by newly computed values:
+
+  phi_old(i)[b] = phi_new(i)[b] (1<=i<=56, b in {0,1})
+
+2.c) For each agent, compute its decision about its associated key bit as the
+value b that minimizes phi_new[b]. Altogether they form the current best choice
+for the secret key: BK. If this is the first iteration or if the new BK differs
+from the old one, go to 2.a), else, stability was reached, stop iterating.
+
+3) Compute confidence indicators for each agent:
+
+   if first iteration or phi_new(i)[0] == phi_new(i)[1]
+     confidence = 0;
+   else
+     confidence = phi_new(i)[b] / phi_new(i)[1-b];
+   end if;
+
+where b is the agent's decision. If more than one iteration took place and if
+the phi_new values differ, then, by definition of the decision,
+
+  phi_new[b] < phi_new[1-b] => confidence < 1
+
+The confidence indicator is thus between 0 (no confidence at all about the
+current preferred value) and 1 (very strong confidence).
+
+Note: in this simplified version of the algorithm, each agent is given a weight
+equal to the inverse of its number of neighbors (1 / |Nj| in the formula above),
+which is suggested by the author of the theory as a "basic scheme". This choice
+fulfills the constraints on the W propagation matrix and assigns an identical
+weight to each neighbor. It could be that other values or even dynamic,
+adaptive, values give better results. We used these values because we had no
+objective reason to prefer any neighbor more than another.
+
+Note: the lambda coefficient of the cooperative optimization (the one that
+defines the amount of cooperation between the agents) is set to (k-1)/k, where k
+is the iteration number of the algorithm (1<=k). That is, as the algorithm
+iterates, the impact of the neighbors increases from none to 100%. During the
+first iteration each agent optimizes its local sub-function alone and ignores
+its neighbors. It is thus very unlikely that the result converges to the global
+optimum in one iteration only. As more iterations are added, the role of the
+neighbors increases and already becomes predominant at the third iteration. This
+scheme is suggested by the author of the theory in his stereo matching example.
+Here again, it could be that other schemes give better results.
+
+E) Wrap up:
+===========
+
+The cpa_cop program implements and evaluates the efficiency of the algorithm
+described above:
+
+usage: ./cpa_cop [OPTION]... TRACEFILE [TRACEFILE...]
+Apply a cooperative optimization algorithm to retrieve the 56 bits
+DES secret key from a set of power traces, plain texts and cipher texts.
+
+Mandatory arguments to long options are mandatory for short options too.
+  -n, --nsets=N        number of traces sets to attack (default: 1)
+  -b, --bits=B         number of bits to retrieve without brute force (default: 48)
+  -p, --power          use the standard power model (default: off)
+  -o, --optimized      use the optimized power model (default: on)
+  -h, --help           display this help and exit
+
+The program reads all the provided trace files and randomly builds N ordered
+traces sets. Each set contains all the traces but in different random orders.
+Each set is then attacked starting with the first 50 traces and increasing the
+number of traces until 100 consecutive attacks succeded. The score of each set
+is printed. The average value of the scores over all the sets is also printed
+after completion. This scenario intends to implement the "Representative order"
+evaluation proposed by the DPA contest. Example: assuming file 'traces.hws'
+contains all the 81089 traces of table 'secmatv1_2006_04_0809',
+
+  ./cpa_cop -n 1000 traces.hws
+
+will randomly build 1000 sets SET[1..1000] from the 81089 traces. It will then
+run the BS-CPA-COP attack according to the following pseudo-code:
+
+SUM = 0;
+for X in 1 to 1000
+  SET = RANDOMIZE({1..81089});
+  CNT = 0;
+  Y = 50;
+  while CNT != 100
+    Y = Y + 1;
+    SUCCESS = BS-CPA-COP(SET[1..Y]);
+    if SUCCESS
+      CNT += 1;
+    else
+      CNT = 0;
+    end if;
+  end while;
+  SUM = SUM + Y;
+end for;
+print SUM * 100 /X;
+
+During execution, cpa_cop prints intermediate progression reports on standard
+error output. These reports comprise the number of processed sets, the number of
+trace for the current attack and the current number of consecutive successful
+attacks. The output thus looks like this:
+
+  set traces hits average
+    1   309  100  309.000
+    2   262  100  285.500
+    3   205   37
+
+after the two first sets were processed and the third one is currently
+processed. After the processing of the first set, the score was 309 traces for
+100 consecutive successful attacks. The score was 262 on the second set, leading
+to an average score of 285.5 over two sets. The third set is currently attacked
+with 205 traces, the last 37 attacks (168 to 204) were successful but the attack
+using 167 traces was not.
+
+The same report is also printed in a log file named cpa_cop.log.XXXXXX where
+XXXXXX is a unique sequence of characters.
+
+F) Results:
+===========
+
+The full 81089 traces of the secmatv1_2006_04_0809 table of the database have
+been fetched and attacked with the following parameters and options:
+
+  ./fetch secmatv1_2006_04_0809 secmatv1_2006_04_0809.hws
+  ./cpa_cop -n 1000 -p secmatv1_2006_04_0809.hws
+  mv cpa_cop.log.WbZjiV cpa-cop-1000-p-r248.dat
+
+Warning: this requires about 6.5 GBytes of disk space, at least 8 Gbytes of RAM
+(preferably 16) and an OS supporting very large files. If large files are not
+supported, the table can be fetched in several consecutive groups of traces:
+
+  ./fetch secmatv1_2006_04_0809 traces/t1.hws 20000 0
+  ./fetch secmatv1_2006_04_0809 traces/t2.hws 20000 20000
+  ./fetch secmatv1_2006_04_0809 traces/t3.hws 20000 40000
+  ./fetch secmatv1_2006_04_0809 traces/t4.hws 20000 60000
+  ./fetch secmatv1_2006_04_0809 traces/t5.hws 89 80000
+  ./cpa_cop -n 1000 -p traces/*
+  mv cpa_cop.log.WbZjiV cpa-cop-1000-p-r248.dat
+
+The 'cpa-cop-1000-r248.dat' file contain the 1000 scores. The average score over
+1000 sets is 252.831.
+
+We also tested whether retreiving 56 bits instead of only 48 would make a
+difference:
+
+  ./cpa_cop -n 1000 -b 56 secmatv1_2006_04_0809.hws
+  mv cpa_cop.log.GC6RXe cpa-cop-1000-b56-r248.dat
+
+On 1000 different random traces orders, the final score was 271.316, that is
+about 9 more traces than when attacking 48 bits only.

@@ -1,0 +1,112 @@
+
+                              < M A T L A B >
+                  Copyright 1984-2007 The MathWorks, Inc.
+                         Version 7.4.0.287 (R2007a)
+                              January 29, 2007
+
+ 
+  To get started, type one of these: helpwin, helpdesk, or demo.
+  For product information, visit www.mathworks.com.
+ 
+>> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> Loading data.............
+>> >> >> >> >> >> >> >> >> >> >> >> >> >> >> >> Attacking trial #1 MTD : 179 Average : 179
+Attacking trial #2 MTD : 357 Average : 268
+Attacking trial #3 MTD : 308 Average : 2.813333e+02
+Attacking trial #4 MTD : 236 Average : 270
+Attacking trial #5 MTD : 196 Average : 2.552000e+02
+Attacking trial #6 MTD : 235 Average : 2.518333e+02
+Attacking trial #7 MTD : 201 Average : 2.445714e+02
+Attacking trial #8 MTD : 201 Average : 2.391250e+02
+Attacking trial #9 MTD : 235 Average : 2.386667e+02
+Attacking trial #10 MTD : 244 Average : 2.392000e+02
+Attacking trial #11 MTD : 295 Average : 2.442727e+02
+Attacking trial #12 MTD : 189 Average : 2.396667e+02
+Attacking trial #13 MTD : 195 Average : 2.362308e+02
+Attacking trial #14 MTD : 168 Average : 2.313571e+02
+Attacking trial #15 MTD : 210 Average : 2.299333e+02
+Attacking trial #16 MTD : 341 Average : 2.368750e+02
+Attacking trial #17 MTD : 272 Average : 2.389412e+02
+Attacking trial #18 MTD : 299 Average : 2.422778e+02
+Attacking trial #19 MTD : 321 Average : 2.464211e+02
+Attacking trial #20 MTD : 211 Average : 2.446500e+02
+Attacking trial #21 MTD : 207 Average : 2.428571e+02
+Attacking trial #22 MTD : 263 Average : 2.437727e+02
+Attacking trial #23 MTD : 269 Average : 2.448696e+02
+Attacking trial #24 MTD : 196 Average : 2.428333e+02
+Attacking trial #25 MTD : 262 Average : 2.436000e+02
+Attacking trial #26 MTD : 257 Average : 2.441154e+02
+Attacking trial #27 MTD : 174 Average : 2.415185e+02
+Attacking trial #28 MTD : 179 Average : 2.392857e+02
+Attacking trial #29 MTD : 215 Average : 2.384483e+02
+Attacking trial #30 MTD : 165 Average : 236
+Attacking trial #31 MTD : 205 Average : 235
+Attacking trial #32 MTD : 320 Average : 2.376562e+02
+Attacking trial #33 MTD : 185 Average : 2.360606e+02
+Attacking trial #34 MTD : 194 Average : 2.348235e+02
+Attacking trial #35 MTD : 189 Average : 2.335143e+02
+Attacking trial #36 MTD : 371 Average : 2.373333e+02
+Attacking trial #37 MTD : 271 Average : 2.382432e+02
+Attacking trial #38 MTD : 233 Average : 2.381053e+02
+Attacking trial #39 MTD : 152 Average : 2.358974e+02
+Attacking trial #40 MTD : 272 Average : 2.368000e+02
+Attacking trial #41 MTD : 266 Average : 2.375122e+02
+Attacking trial #42 MTD : 221 Average : 2.371190e+02
+Attacking trial #43 MTD : 356 Average : 2.398837e+02
+Attacking trial #44 MTD : 258 Average : 2.402955e+02
+Attacking trial #45 MTD : 187 Average : 2.391111e+02
+Attacking trial #46 MTD : 222 Average : 2.387391e+02
+Attacking trial #47 MTD : 234 Average : 2.386383e+02
+Attacking trial #48 MTD : 257 Average : 2.390208e+02
+Attacking trial #49 MTD : 225 Average : 2.387347e+02
+Attacking trial #50 MTD : 270 Average : 2.393600e+02
+Attacking trial #51 MTD : 230 Average : 2.391765e+02
+Attacking trial #52 MTD : 201 Average : 2.384423e+02
+Attacking trial #53 MTD : 212 Average : 2.379434e+02
+Attacking trial #54 MTD : 224 Average : 2.376852e+02
+Attacking trial #55 MTD : 292 Average : 2.386727e+02
+Attacking trial #56 MTD : 203 Average : 2.380357e+02
+Attacking trial #57 MTD : 194 Average : 2.372632e+02
+Attacking trial #58 MTD : 201 Average : 2.366379e+02
+Attacking trial #59 MTD : 195 Average : 2.359322e+02
+Attacking trial #60 MTD : 227 Average : 2.357833e+02
+Attacking trial #61 MTD : 204 Average : 2.352623e+02
+Attacking trial #62 MTD : 172 Average : 2.342419e+02
+Attacking trial #63 MTD : 240 Average : 2.343333e+02
+Attacking trial #64 MTD : 198 Average : 2.337656e+02
+Attacking trial #65 MTD : 206 Average : 2.333385e+02
+Attacking trial #66 MTD : 256 Average : 2.336818e+02
+Attacking trial #67 MTD : 283 Average : 2.344179e+02
+Attacking trial #68 MTD : 230 Average : 2.343529e+02
+Attacking trial #69 MTD : 183 Average : 2.336087e+02
+Attacking trial #70 MTD : 338 Average : 2.351000e+02
+Attacking trial #71 MTD : 163 Average : 2.340845e+02
+Attacking trial #72 MTD : 217 Average : 2.338472e+02
+Attacking trial #73 MTD : 169 Average : 2.329589e+02
+Attacking trial #74 MTD : 243 Average : 2.330946e+02
+Attacking trial #75 MTD : 205 Average : 2.327200e+02
+Attacking trial #76 MTD : 291 Average : 2.334868e+02
+Attacking trial #77 MTD : 209 Average : 2.331688e+02
+Attacking trial #78 MTD : 244 Average : 2.333077e+02
+Attacking trial #79 MTD : 218 Average : 2.331139e+02
+Attacking trial #80 MTD : 174 Average : 2.323750e+02
+Attacking trial #81 MTD : 253 Average : 2.326296e+02
+Attacking trial #82 MTD : 156 Average : 2.316951e+02
+Attacking trial #83 MTD : 214 Average : 2.314819e+02
+Attacking trial #84 MTD : 178 Average : 2.308452e+02
+Attacking trial #85 MTD : 197 Average : 2.304471e+02
+Attacking trial #86 MTD : 245 Average : 2.306163e+02
+Attacking trial #87 MTD : 163 Average : 2.298391e+02
+Attacking trial #88 MTD : 234 Average : 2.298864e+02
+Attacking trial #89 MTD : 199 Average : 2.295393e+02
+Attacking trial #90 MTD : 251 Average : 2.297778e+02
+Attacking trial #91 MTD : 314 Average : 2.307033e+02
+Attacking trial #92 MTD : 197 Average : 2.303370e+02
+Attacking trial #93 MTD : 184 Average : 2.298387e+02
+Attacking trial #94 MTD : 213 Average : 2.296596e+02
+Attacking trial #95 MTD : 210 Average : 2.294526e+02
+Attacking trial #96 MTD : 260 Average : 2.297708e+02
+Attacking trial #97 MTD : 377 Average : 2.312887e+02
+Attacking trial #98 MTD : 221 Average : 2.311837e+02
+Attacking trial #99 MTD : 169 Average : 2.305556e+02
+Attacking trial #100 MTD : 253 Average : 2.307800e+02
+>> >> >> >> 

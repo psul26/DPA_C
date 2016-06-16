@@ -55,24 +55,24 @@ class traces_database:
 			first += 1
 			if first > 0:# and first%3 == 0:
 
-				#newFiles.append(h)
-				name, info = h.split('__') # split the file name into name, and info
-				key, msg, crypt = info.split('_') # split the file name at the "_" mark
-				msg = msg[2:]
-				HW = hamming_weight_fcn(msg)
-				
-				if HW == 31:
-					newFiles.append(h)
-				# elif HW < 21:
+				newFiles.append(h)
+				# name, info = h.split('__') # split the file name into name, and info
+				# key, msg, crypt = info.split('_') # split the file name at the "_" mark
+				# msg = msg[2:]
+				# HW = hamming_weight_fcn(msg)
+				# #newFiles.append(h)
+				# if HW == 25:
 				# 	newFiles.append(h)
-				# elif HW == 28:
+				# # elif HW < 21:
+				# # 	newFiles.append(h)
+				# # elif HW == 28:
+				# # 	newFiles.append(h)
+				# elif HW == 38:
 				# 	newFiles.append(h)
-				elif HW == 34:
-					newFiles.append(h)
-				# elif HW == 37:
-				# 	newFiles.append(h)
-				# elif HW == 33:
-				# 	newFiles.append(h)
+				# # elif HW == 37:
+				# # 	newFiles.append(h)
+				# # elif HW == 33:
+				# # 	newFiles.append(h)
 
 		
 			
@@ -96,7 +96,7 @@ class traces_database:
 		# 		newFiles.remove(i)
 		# for i in newFiles:
 		# 	print i
-		#random.shuffle(newFiles)
+		random.shuffle(newFiles)
 		for f in newFiles:
 			name, info = f.split('__') # split the file name into name, and info
 			key, msg, crypt = info.split('_') # split the file name at the "_" mark

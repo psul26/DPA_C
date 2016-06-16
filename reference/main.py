@@ -52,11 +52,11 @@ def main():
 
 	while fullkey == None:
 		msg, crypt, trace = traces.next()
-		brk.process(msg, trace)
+		brk.process(msg, k4( 100, trace )) # k4 does the preprocessing step
 		iteration+= 1
 		text= str(iteration).rjust(4) + " "
 		# When enough iterations, trying to guess subkeys
-		if iteration >= thresh:
+		if iteration >= ITERATION_THRESHOLD:
 			# Computing new subkeys and stability mark
 			loc_subkeys= brk.get_subkeys()
 			if loc_subkeys == subkeys:
@@ -69,17 +69,13 @@ def main():
 			for sk in subkeys:
 				text+= " " + str(sk).rjust(2)
 			# If subkeys have been stable for long enough, try to guess the full key
-			if stability >= __STABILITY_THRESHOLD__:
+			if stability >= STABILITY_THRESHOLD:
 				fullkey= brk.get_key(msg, crypt)
 		# Flushing output
-		if iteration >= thresh:
-		#	thresh+= 20
-			out('goal 100 56 11 59 38 00 13 25 55 ')
 		out( text )
 
 	# End of Attack
 	out( "# Key: " + str(fullkey) + "\n" )
-	print(str(datetime.now())+'\n')
 	
 	fd.close()
 

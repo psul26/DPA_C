@@ -1,0 +1,2 @@
+Average number of traces (80 exp.)  : 122 (DPA contest policy: 221)
+Average number of traces (1000 exp.): 125 (DPA contest policy: 224)

@@ -1,0 +1,18 @@
+12/05/2010 Version 1.1.0
+
+* New FIFO mode to make it easier to use Matlab under Unix/Linux
+
+
+23/02/2010 Version 1.0
+
+* Use of autoconf/automake to make the compilation and installation
+  process easier and to improve portability
+
+* Multi-threading capability (the n+1 trace is fetched at the same
+  time that the trace n is processed by the attack program)
+
+* Possibility to read traces from the disk instead of retrieve them
+  from the public database (to bypass strict firewalls and to speed
+  up)
+
+* Addition of a reference attack in Python

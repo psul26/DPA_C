@@ -1,0 +1,1 @@
+COPY /B "log_files.000"+"log_files.001"+"log_files.002"+"log_files.003"+"log_files.004"+"log_files.005" "log_files.zip"

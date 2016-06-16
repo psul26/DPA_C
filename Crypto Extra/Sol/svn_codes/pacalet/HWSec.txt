@@ -1,0 +1,91 @@
+**********************************************************************************
+Copyright Institut Telecom
+Contributors: Renaud Pacalet (renaud.pacalet@telecom-paristech.fr)
+
+This software is a computer program whose purpose is to exploit power traces
+in order to retrieve a Data Encryption Standard (DES) secret key.
+
+This software is governed by the CeCILL license under French law and
+abiding by the rules of distribution of free software.  You can  use, 
+modify and/ or redistribute the software under the terms of the CeCILL
+license as circulated by CEA, CNRS and INRIA at the following URL
+"http://www.cecill.info". 
+
+As a counterpart to the access to the source code and  rights to copy,
+modify and redistribute granted by the license, users are provided only
+with a limited warranty  and the software's author,  the holder of the
+economic rights,  and the successive licensors  have only  limited
+liability. 
+
+In this respect, the user's attention is drawn to the risks associated
+with loading,  using,  modifying and/or developing or reproducing the
+software by the user in light of its specific status of free software,
+that may mean  that it is complicated to manipulate,  and  that  also
+therefore means  that it is reserved for developers  and  experienced
+professionals having in-depth computer knowledge. Users are therefore
+encouraged to load and test the software's suitability as regards their
+requirements in conditions enabling the security of their systems and/or 
+data to be ensured and,  more generally, to use and operate it in the 
+same conditions as regards security. 
+
+The fact that you are presently reading this means that you have had
+knowledge of the CeCILL license and that you accept its terms. For more
+information see the LICENCE-fr.txt or LICENSE-en.txt files.
+**********************************************************************************
+
+Description of the format of the (binary) HWSec trace file format. Each HWSec
+trace file contains global parameters and a set of power traces along with their
+corresponding plain texts and cypher texts. The file format is best described by
+the following C structure:
+
+struct {
+  char     *magic_number = "HWSec"; /* 5 bytes */
+  uint32_t depth;                   /* 4 bytes */
+  uint32_t length;                  /* 4 bytes */
+  uint64_t secret key;              /* 8 bytes */
+  struct {
+    uint64_t plain_text;            /* 8 bytes */
+    uint64_t cipher_text;           /* 8 bytes */
+    float    power_trace[length];   /* 4 bytes each */
+  } traces[depth];
+}
+
+The total size of the file is thus 5+4+4+depth*(8+8+4*length). Opening a HWSec
+trace file and extracting the global parameters can be done with the following C
+code:
+
+#define TRMAGICNUMBERLEN 5
+#define TRMAGICNUMBER "HWSec"
+...
+FILE *fp;
+char dummy[TRMAGICNUMBERLEN];
+uint32_t depth, length;
+uint64_t key;
+...
+fp = fopen(filename, "r");
+if(fp == NULL) error(__func__, "Cannot open file %s", filename);
+if(fread(dummy, sizeof(char), TRMAGICNUMBERLEN, fp) != TRMAGICNUMBERLEN)
+  error(__func__, "Cannot read magic number from file %s", filename);
+if(strncmp(dummy, TRMAGICNUMBER, TRMAGICNUMBERLEN) != 0)
+  error(__func__, "Wrong magic number in file %s", filename);
+if(fread(&depth, sizeof(depth), 1, fp) != 1)
+  error(__func__, "Cannot read depth from file %s", filename);
+if(fread(&length, sizeof(length), 1, fp) != 1)
+  error(__func__, "Cannot read length from file %s", filename);
+if(fread(&key, sizeof(key), 1, fp) != 1)
+  error(__func__, "Cannot read key from file %s", filename);
+
+Then, allocating a trace array and reading the next trace, plain text and cipher
+text can be done with:
+
+uint64_t p, c;
+float *t;
+...
+t = calloc(length, sizeof(float));
+if(t == NULL) error(__func__, "Memory allocation");
+if(fread(&p, sizeof(uint64_t), 1, fp) != 1)
+  error(__func__, "Cannot read plain text");
+if(fread(&c, sizeof(uint64_t), 1, fp) != 1)
+  error(__func__, "Cannot read cipher text");
+if(fread(t, sizeof(float), length, fp) != length)
+  error(__func__, "Cannot read power trace");

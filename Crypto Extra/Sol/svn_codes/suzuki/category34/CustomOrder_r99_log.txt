@@ -1,0 +1,12 @@
+Analysis process
+Step 01 :TargetRound=16 | TargetSbox=6 | AdoptedInterval=14510:14514 | SearchSpace=2^6 | FileNum=11 
+Step 02 :TargetRound=16 | TargetSbox=8 | AdoptedInterval=14500:14504 | SearchSpace=2^6 | FileNum=06 
+Step 03 :TargetRound=16 | TargetSbox=5 | AdoptedInterval=14495:14499 | SearchSpace=2^6 | FileNum=04 
+Step 04 :TargetRound=01 | TargetSbox=1 | AdoptedInterval=05745:05749 | SearchSpace=2^6 | FileNum=15 
+Step 05 :TargetRound=16 | TargetSbox=1 | AdoptedInterval=14510:14514 | SearchSpace=2^6 | FileNum=15 
+Step 06 :TargetRound=01 | TargetSbox=6 | AdoptedInterval=05735:05739 | SearchSpace=2^2 | FileNum=08 
+Step 07 :TargetRound=16 | TargetSbox=7 | AdoptedInterval=14490:14494 | SearchSpace=2^4 | FileNum=13 
+Step 08 :TargetRound=16 | TargetSbox=2 | AdoptedInterval=14480:14484 | SearchSpace=2^4 | FileNum=09 
+Step 09 :TargetRound=01 | TargetSbox=4 | AdoptedInterval=05725:05729 | SearchSpace=2^1 | FileNum=02 
+Step 10 :TargetRound=16 | TargetSbox=3 | AdoptedInterval=14495:14499 | SearchSpace=2^4 | FileNum=05 
+Step 11 :TargetRound=01 | TargetSbox=2 | AdoptedInterval=05740:05744 | SearchSpace=2^3 | FileNum=16 

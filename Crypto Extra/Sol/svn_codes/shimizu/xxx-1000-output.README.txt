@@ -1,0 +1,45 @@
+Dear Dr. Guilley
+
+I have done 1000 try for exec_bcpa1.m, exec_dpa.m, exec_cpa.m.
+I send you 3 log files.
+
+Summary of 3 files
+
+bcpa1-1000-output.txt   average 234.379 trace
+dpa-1000-output.txt     average 371.772 trace
+cpa-1000-output.txt     average 388.988 trace
+
+Of course, DPA and CPA data is reference data. I wonder DPA is better
+than CPA.
+
+Because size of the files are large, I send seperately.
+At first, bcpa1-1000-output.txt (736k bytes)
+
+Sincerely
+
+
+hideo wrote:
+> > Dear Dr. Guilly
+> > 
+> > Now, I upload 3 scripts of category 1.
+> > 
+> > exec_cpa.m, exec_dpa.m, exec_bcpa1.m run CPA, DPA, BS-CPA, respectively
+> > with random trace order on Matlab.
+> > 
+> > I don't know what outputs are needed. So, I only merge old-style output
+> > files. Because this cause output file glow very large. So, I attach only
+> > 10 attacks with random trace orders.
+> > If do you have any advice about output file, please inform me.
+> > 
+> > See additional information on readme2.txt.
+> > 
+> > Sincerely
+> > 
+> > --
+> > Hideo Shimizu
+> > Toshiba Corporation Research & Development Center
+> > 
+> > 
+
+Hideo Shimizu
+Toshiba Corporation Research & Development Center

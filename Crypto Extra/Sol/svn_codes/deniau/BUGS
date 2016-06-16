@@ -1,0 +1,3 @@
+* Known bugs in r36:
+
+SWIG's %newobject should let Python take ownership of the objects returned by getDifferential and getValues. Unfortunately, this doesn't seem to work, so we set the "thisown" flag manually

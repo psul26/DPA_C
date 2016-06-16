@@ -54,24 +54,24 @@ class traces_database:
 			first += 1
 			if first > 0:# and first%3 == 0:
 
-				newFiles.append(h)
-				# name, info = h.split('__') # split the file name into name, and info
-				# key, msg, crypt = info.split('_') # split the file name at the "_" mark
-				# msg = msg[2:]
-				# HW = hamming_weight_fcn(msg)
+				#newFiles.append(h)
+				name, info = h.split('__') # split the file name into name, and info
+				key, msg, crypt = info.split('_') # split the file name at the "_" mark
+				msg = msg[2:]
+				HW = hamming_weight_fcn(msg)
 				
-				# if HW == 31:
+				if HW == 31:
+					newFiles.append(h)
+				# elif HW < 21:
 				# 	newFiles.append(h)
-				# # elif HW < 21:
-				# # 	newFiles.append(h)
-				# # elif HW == 28:
-				# # 	newFiles.append(h)
-				# elif HW == 34:
+				# elif HW == 28:
 				# 	newFiles.append(h)
-				# # elif HW == 37:
-				# # 	newFiles.append(h)
-				# # elif HW == 33:
-				# # 	newFiles.append(h)
+				elif HW == 34:
+					newFiles.append(h)
+				# elif HW == 37:
+				# 	newFiles.append(h)
+				# elif HW == 33:
+				# 	newFiles.append(h)
 
 			
 
